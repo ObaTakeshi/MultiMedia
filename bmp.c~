@@ -1,4 +1,5 @@
 #include "image.h"
+#include <stdio.h>
 
 typedef unsigned long DWORD;
 typedef int BOOL;
@@ -60,7 +61,7 @@ int fwriteDWORD(DWORD val,FILE *fp){
   int i,c;
 
   c = val;
-  for(i = 0;i < 2;i++){
+  for(i = 0;i < 4;i++){
     fputc(c % 256,fp);
     c /= 256;
   }
@@ -127,6 +128,7 @@ int countOfDIBColorEntries(int iBitCount){
     break;
   case 8:
     iColors = 256;
+break;
   default:
     iColors = 0;
     break;
@@ -226,7 +228,7 @@ int readBMPfile(char *fname,ImageData **img){
   }
 
   /*ヘッダ部のサイズ*/
-  if(!freadDWORD(&HEAD_bfSize,fp)){
+  if(!freadDWORD(&INFO_bfSize,fp)){
     errcode = -10;
     goto $ABORT;
   }
@@ -293,6 +295,11 @@ int readBMPfile(char *fname,ImageData **img){
 	errcode = -10;
 	goto $ABORT;
       }
+/*画像データ部のサイズ*/
+if(!freadDWORD(&(BMPInfo.biSizeImage),fp)){
+errcode = -10;
+goto $ABORT;
+}
       /* X方向の解像度 */
       if(!freadDWORD(&(BMPInfo.biXPelsPerMeter), fp)) {
 	errcode = -10;
@@ -419,7 +426,7 @@ int readBMPfile(char *fname,ImageData **img){
       if(depth==8) { /* 256色形式の場合はパレットからRGB値を求める */
 	c = fgetc(fp);
 	if(c==EOF) {
-	  errcode = -10;
+	  errcode = -20;
 	  goto $ABORT;
 	}
 	setcolor.r = palet[c].r;
@@ -429,19 +436,19 @@ int readBMPfile(char *fname,ImageData **img){
       else if(depth==24) {
 	c = fgetc(fp);
 	if(c==EOF) {
-	  errcode = -10;
+	  errcode = -20;
 	  goto $ABORT;
 	}
 	setcolor.b = c;
 	c = fgetc(fp);
 	if(c==EOF) {
-	  errcode = -10;
+	  errcode = -20;
 	  goto $ABORT;
 	}
 	setcolor.g = c;
 	c = fgetc(fp);
 	if(c==EOF) {
-	  errcode = -10;
+	  errcode = -20;
 	  goto $ABORT;
 	}
 	setcolor.r = c;
@@ -454,7 +461,7 @@ int readBMPfile(char *fname,ImageData **img){
     for(i=0; i<pad; i++) {
       c = fgetc(fp);
       if(c==EOF) {
-	errcode = -10;
+	errcode = -20;
 	goto $ABORT;
       }
     }
@@ -469,6 +476,7 @@ int readBMPfile(char *fname,ImageData **img){
 /* 画像データをBMP形式(Windows形式)でファイルに書き出す */
 /* (フルカラーの画像データのみサポート) */
 int writeBMPfile(char *fname, ImageData *img) {
+puts("0");
   FILE *fp;
   BITMAPFILEHEADER bfn;
   int w, h, rw;
@@ -481,11 +489,12 @@ int writeBMPfile(char *fname, ImageData *img) {
   int iBytes;
   unsigned int wsize;
   Pixel pix;
-
-  w = img->width;
+printf("%d",img->width);
+  w = img->width; //問題あり
+puts("12");
   h = img->height;
   depth = img->depth;
-
+puts("10");
   /* フルカラー以外サポート外 */
   if(depth!=24) {
     goto $abort1;
@@ -504,9 +513,9 @@ int writeBMPfile(char *fname, ImageData *img) {
     palsize  = 256;
   }
 
-  /* パディングを考慮した1列分んい必要なバイト数 */
+  /* パディングを考慮した1列分に必要なバイト数 */
   rw = getDIBxmax(w, depth);
-
+puts("1");
   /* ヘッダ部の設定(一部のみ) */
   bfn.bfType = 0x4d42;    /*'BM'*/
   bfn.bfSize = 14  /* sizeof(BITMAPFILEHEADER) */ + 
@@ -522,7 +531,7 @@ int writeBMPfile(char *fname, ImageData *img) {
   if((fp=fopen(fname, "wb"))==NULL) {
     goto $abort1;
   }
-
+puts("2");
   /* ヘッダ部の書き出し */
   fwriteWORD(bfn.bfType, fp);
   fwriteDWORD(bfn.bfSize, fp);
@@ -540,7 +549,7 @@ int writeBMPfile(char *fname, ImageData *img) {
   fwriteDWORD(300, fp); /* biYPelsPerMeter */
   fwriteDWORD(0, fp); /* biClrUsed */
   fwriteDWORD(0, fp); /* biClrImportant */
-    
+  puts("3");
   /* 必要なパディングのサイズ */
   pad = rw - w*depth/8;
     
