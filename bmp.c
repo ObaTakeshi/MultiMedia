@@ -33,7 +33,7 @@ typedef struct tagBITMAPINFOHEADER{
   LONG biHeight;
   WORD biPlanes;
   WORD biBitCount;
-  DWOR DbiCompression;
+  DWORD biCompression;
   DWORD biSizeImage;
   LONG biXPelsPerMeter;
   LONG biYPelsPerMeter;
@@ -240,14 +240,14 @@ int readBMPfile(char *fname,ImageData **img){
       isPM = TRUE;
       /*画像の横幅*/
       if(!freadWORD(&tmp,fp)){
-	errcode = -10;
-	goto $ABORT;
+  errcode = -10;
+  goto $ABORT;
       }
       BNPInfo.biWidth = tmp;
       /*画像の縦幅*/
       if(!freadWORD(&tmp,fp)){
-	errcode = -10;
-	goto $ABORT;
+  errcode = -10;
+  goto $ABORT;
       }
         BMPInfo.biHeight = tmp;
     
@@ -458,6 +458,7 @@ for(y=my-1; y>=0; y--) {
             goto $ABORT;
         }
     }
+  }
 
 $ABORT: /* エラー時の飛ばし先 */
     
@@ -524,20 +525,44 @@ int writeBMPfile(char *fname, ImageData *img) {
     }
 
     /* ヘッダ部の書き出し */
-    fwriteWORD();
-    fwriteDWORD();
-    fwriteWORD();
-    fwriteWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteWORD();
-    fwriteWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    fwriteDWORD();
-    
+    fwriteWORD(bfn.bfType, fp);
+    fwriteDWORD(bfn.bfSize, fp);
+    fwriteWORD(bfn.bfReserved1, fp);
+    fwriteWORD(bfn.bfReserved2, fp);
+    fwriteDWORD(bfn.bfOffBits, fp);
+    fwriteDWORD(40 /*sizeof(BITMAPINFOHEADER)*/, fp); /* biSize */
+    fwriteDWORD(w, fp); /* biWidth */
+    fwriteDWORD(h, fp); /* biHeight */
+    fwriteWORD(1, fp); /* biPlanes */
+    fwriteWORD(depth, fp); /* biBitCount */
+    fwriteDWORD(BI_RGB, fp); /* biCompression */
+    fwriteDWORD(0, fp); /* biSizeImage */
+    fwriteDWORD(300, fp); /* biXPelsPerMeter */
+    fwriteDWORD(300, fp); /* biYPelsPerMeter */
+    fwriteDWORD(0, fp); /* biClrUsed */
+    fwriteDWORD(0, fp); /* biClrImportant */
+
+    /* 必要なパディングのサイズ */
+    pad = rw - w*depth/8;
+
+    /* 画像データの書き出し */
+    for (y=h-1; y>=0; y--) {
+      for(x=0; x<w; x++) {
+        getPixel(image, x, y, &pix);
+        fputc(pix, b, fp);
+        fputc(pix, g, fp);
+        fputc(pix, r, fp);
+      }
+      /* Padding部の出力 */
+      for(i=0; i<pad; i++){
+        fputc(0, fp);
+      }
+    }
+
+    return 0;
+
+$abort1:
+  return 1;
+$abort2:
+  return 1;
+}
