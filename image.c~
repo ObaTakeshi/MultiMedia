@@ -129,7 +129,7 @@ int setPixel(ImageData *img,int x,int y,Pixel *pix){
     return 0;
   }
   dep = img->depth;
-  adr = x + y * img->width;
+  ard = x + y * img->width;
   pixels = img->pixels;
   if(dep == 8){
     pixels[adr] = correctValue(pix->r,PIXELMAX);

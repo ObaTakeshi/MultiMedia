@@ -73,7 +73,7 @@ int freadWORD(WORD *res,FILE *fp){
   int val[2];
 
   for(i = 0;i < 2;i++){
-    c = fgets(fp);
+    c = fgetc(fp);
     if(c == EOF)
       return FALSE;
     val[i] = c;
@@ -89,7 +89,7 @@ int freadDWORD(DWORD *res,FILE *fp){
   DWORD tmp = 0;
 
   for(i = 0;i < 4;i++){
-    c = fgets(fp);
+    c = fgetc(fp);
     if(c == EOF)
       return FALSE;
     val[i] = c;
@@ -165,7 +165,7 @@ int readBMPfile(char *fname,ImageData **img){
   BITMAPFILEHEADER BMPFile;
   int fsize;
   BITMAPINFOHEADER BMPInfo;
-  BITMAPCOREhEADER BMPCore;
+  BITMAPCOREHEADER BMPCore;
   int colors;
   int colorTableSize;
   int bitsSize;
@@ -240,14 +240,14 @@ int readBMPfile(char *fname,ImageData **img){
       isPM = TRUE;
       /*画像の横幅*/
       if(!freadWORD(&tmp,fp)){
-  errcode = -10;
-  goto $ABORT;
+	errcode = -10;
+	goto $ABORT;
       }
-      BNPInfo.biWidth = tmp;
+      BMPInfo.biWidth = tmp;
       /*画像の縦幅*/
       if(!freadWORD(&tmp,fp)){
-  errcode = -10;
-  goto $ABORT;
+	errcode = -10;
+	goto $ABORT;
       }
         BMPInfo.biHeight = tmp;
     
@@ -265,12 +265,12 @@ int readBMPfile(char *fname,ImageData **img){
     } 
     else { /* BITMAPINFOHEADER形式の場合 */
         /* 画像の横幅 */
-        if(!freadWORD(&(BMPInfo.biWidth),fp)) {
+        if(!freadDWORD(&(BMPInfo.biWidth),fp)) {
             errcode = -10;
             goto $ABORT;
         }
         /* 画像の縦幅 */
-        if(!freadWORD(&(BMPInfo.biHeight),fp)) {
+        if(!freadDWORD(&(BMPInfo.biHeight),fp)) {
             errcode = -10;
             goto $ABORT;
         }
@@ -289,27 +289,27 @@ int readBMPfile(char *fname,ImageData **img){
     /* BITMAPINFOHEADERの場合のみ存在する情報を読み込む */
     if(!isPM) {
         /* 圧縮形式 */
-        if(!freadWORD(&(BMPInfo.biCompression), fp)) {
+        if(!freadDWORD(&(BMPInfo.biCompression), fp)) {
             errcode = -10;
             goto $ABORT;
         }
         /* X方向の解像度 */
-        if(!freadWORD(&(BMPInfo.biXPelsPerMeter), fp)) {
+        if(!freadDWORD(&(BMPInfo.biXPelsPerMeter), fp)) {
             errcode = -10;
             goto $ABORT;
         }
         /* Y方向の解像度 */
-        if(!freadWORD(&(BMPInfo.biYPelsPerMeter), fp)) {
+        if(!freadDWORD(&(BMPInfo.biYPelsPerMeter), fp)) {
             errcode = -10;
             goto $ABORT;
         }
         /* 格納されているパレットの色数 */
-        if(!freadWORD(&(BMPInfo.biClrUsed), fp)) {
+        if(!freadDWORD(&(BMPInfo.biClrUsed), fp)) {
             errcode = -10;
             goto $ABORT;
         }
         /* 重要なパレットのインデックス */
-        if(!freadWORD(&(BMPInfo.biClrImportant), fp)) {
+        if(!freadDWORD(&(BMPInfo.biClrImportant), fp)) {
             errcode = -10;
             goto $ABORT;
         }
@@ -409,7 +409,7 @@ if(!isPM) {
 }
 
 /* フルカラーで画像データを作成 */ 
-*image = createImage(mx, my, 24);
+*img = createImage(mx, my, 24);
 mxb = getDIBxmax(mx, depth);
 pad = mxb - mx*depth/8;
 
@@ -447,7 +447,7 @@ for(y=my-1; y>=0; y--) {
             setcolor.r = c;
         }
 
-        setPixel(*image, x, y, $setcolor);
+        setPixel(*img, x, y, &setcolor);
     }
 
     /* Padding部の読み飛ばし */
@@ -458,7 +458,6 @@ for(y=my-1; y>=0; y--) {
             goto $ABORT;
         }
     }
-  }
 
 $ABORT: /* エラー時の飛ばし先 */
     
@@ -494,7 +493,7 @@ int writeBMPfile(char *fname, ImageData *img) {
 
     /* フルカラー以外のことを若干考慮しているが未実装 */
     if(depth==24) {
-        goto pbyte = 1;
+        pbyte = 1;
     } else {
         pbyte = depth/8;
     }
