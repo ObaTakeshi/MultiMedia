@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "image.h"
 
+void make_mono_histgram();
 void make_mix_histgram(ImageData *img, ImageData *histimg);
 void linear(ImageData *img, ImageData *outimg);
 
@@ -10,17 +11,20 @@ int main(){
     char *linearname = "./linear.bmp";
     char *original_histname = "./original_hist.bmp";
     char *linear_histname = "./linear_hist.bmp";
+    char *linear_mono_histname = "./linear_mono_hist.bmp";
     
     ImageData *img;
     ImageData *linearimg;
     ImageData *original_histimg;
     ImageData *linear_histimg;
+    ImageData *linear_mono_histimg;
     
     readBMPfile(fname,&img);
     
     linearimg = createImage(img->width,img->height,img->depth);
     original_histimg = createImage(256, 256, img->depth);
     linear_histimg = createImage(256, 256, img->depth);
+    linear_mono_histimg = createImage(256, 768, img->depth);
     
     linear(img,linearimg);
     
@@ -30,12 +34,83 @@ int main(){
     writeBMPfile(linearname,linearimg);
     
     make_mix_histgram(linearimg, linear_histimg);
+    make_mono_histgram(linearimg, linear_mono_histimg);
     
     writeBMPfile(linear_histname, linear_histimg);
+    writeBMPfile(linear_mono_histname, linear_mono_histimg);
     
     disposeImage(img);
     disposeImage(linearimg);
     disposeImage(original_histimg);
+    disposeImage(linear_histimg);
+    disposeImage(linear_mono_histimg);
+}
+
+void make_mono_histgram(ImageData *img, ImageData *histimg) {
+    int i, x, y;
+    long int hist[256][3] = {};
+    Pixel pix;
+    
+    for(x=0;x<img->width;x++) {
+        for(y=0;y<img->height;y++) {
+            getPixel(img,x,y,&pix);
+            hist[pix.r][0]++;
+            hist[pix.g][1]++;
+            hist[pix.b][2]++;
+        }
+    }
+    int l;
+    int h = histimg->height;
+    int max[3] = {255, 255, 255};
+    int takasa[3];
+    
+    for(i=0;i<256;i++) {
+        for(l=0;l<3;l++) {
+            if(max[l] < hist[i][l]) {
+                max[l] = hist[i][l];
+            }
+        }
+    }
+    
+    for(x=0;x<histimg->width;x++) {
+        for(l=0;l<3;l++) {
+            h = histimg->height / 3;
+            takasa[l] = (int)(h / (double)max[l] * hist[x][l]);
+            
+            if(takasa[l] > h) {
+                takasa[l] = h;
+            }
+            
+            if(l == 0) {
+                for(y=0;y<h;y++) {
+                    if(y < takasa[l]) {
+                        pix.r = 255; pix.g = 0; pix.b = 0;
+                    } else {
+                        pix.r = 0; pix.g = 0; pix.b = 0;
+                    }
+                    setPixel(histimg,x,h-1-y,&pix);
+                }
+            } else if(l == 1) {
+                for(y=0;y<h;y++) {
+                    if(y < takasa[l]) {
+                        pix.r = 0; pix.g = 255; pix.b = 0;
+                    } else {
+                        pix.r = 0; pix.g = 0; pix.b = 0;
+                    }
+                    setPixel(histimg,x,h+l*256-1-y,&pix);
+                }
+            }else if(l == 2) {
+                for(y=0;y<h;y++){
+                    if(y < takasa[l]) {
+                        pix.r = 0; pix.g = 0; pix.b = 255;
+                    } else {
+                        pix.r = 0; pix.g = 0; pix.b = 0;
+                    }
+                    setPixel(histimg,x,h+l*256-1-y,&pix);
+                }
+            }
+        }
+    }
 }
 
 void make_mix_histgram(ImageData *img, ImageData *histimg) {
@@ -57,7 +132,7 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
     int takasa[3] = {};
     
     for(i=0;i<256;i++) {
-        for(l=0;l<3;l++){
+        for(l=0;l<3;l++) {
             if(max < hist[i][l]) {
                 max = hist[i][l];
             }
@@ -81,7 +156,7 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
                 pix.r = 255; pix.g = 0; pix.b = 255;
             } else if(y < takasa[0] && y >= takasa[1] && y >= takasa[2]) {
                 pix.r = 255; pix.g = 0; pix.b = 0;
-            } else if(y >= takasa[0] && y < takasa[1] && y < takasa[2]){
+            } else if(y >= takasa[0] && y < takasa[1] && y < takasa[2]) {
                 pix.r = 0; pix.g = 255; pix.b = 255;
             } else if(y >= takasa[0] && y < takasa[1] && y >= takasa[2]) {
                 pix.r = 0; pix.g = 255; pix.b = 0;
