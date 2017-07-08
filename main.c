@@ -7,29 +7,35 @@ void linear(ImageData *img, ImageData *outimg);
 int main(){
     
     char *fname = "./SAMPLE.bmp";
-    char *wname = "./out.bmp";
-    char *histname = "./hist.bmp";
+    char *linearname = "./linear.bmp";
+    char *original_histname = "./original_hist.bmp";
+    char *linear_histname = "./linear_hist.bmp";
     
     ImageData *img;
-    ImageData *outimg;
-    ImageData *histimg;
+    ImageData *linearimg;
+    ImageData *original_histimg;
+    ImageData *linear_histimg;
     
     readBMPfile(fname,&img);
     
-    outimg = createImage(img->width,img->height,img->depth);
-    histimg = createImage(256,256,img->depth);
+    linearimg = createImage(img->width,img->height,img->depth);
+    original_histimg = createImage(256, 256, img->depth);
+    linear_histimg = createImage(256, 256, img->depth);
     
-    printf("read[%s]\n",fname);
+    linear(img,linearimg);
     
-    linear(img,outimg);
+    make_mix_histgram(img,original_histimg);
     
-    make_mix_histgram(img,histimg);
+    writeBMPfile(original_histname,original_histimg);
+    writeBMPfile(linearname,linearimg);
     
-    writeBMPfile(histname,histimg);
-    writeBMPfile(wname,outimg);
+    make_mix_histgram(linearimg, linear_histimg);
     
-    printf("write[%s]\n",wname);
+    writeBMPfile(linear_histname, linear_histimg);
+    
     disposeImage(img);
+    disposeImage(linearimg);
+    disposeImage(original_histimg);
 }
 
 void make_mix_histgram(ImageData *img, ImageData *histimg) {
