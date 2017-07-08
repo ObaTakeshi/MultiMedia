@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include "image.h"
 
-void transform(ImageData *img, ImageData *outimg);
+void linear(ImageData *img, ImageData *outimg);
 
 int main(){
     
     char *fname = "./SAMPLE.bmp";
     char *wname = "./out.bmp";
-    
-    // int by = 3;
     
     ImageData *img;
     ImageData *outimg;
@@ -19,7 +17,7 @@ int main(){
     
     printf("read[%s]\n",fname);
     
-    transform(img,outimg);
+    linear(img,outimg);
     
     writeBMPfile(wname,outimg);
     
@@ -27,7 +25,7 @@ int main(){
     disposeImage(img);
 }
 
-void transform(ImageData *img,ImageData *outimg){
+void linear(ImageData *img,ImageData *outimg){
     int x,y,i; //for文用
     int error; //エラーチェッカー(いらないかも)
     int max[3] = {}; //全要素0で初期化
