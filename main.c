@@ -7,6 +7,7 @@ void linear(ImageData *img, ImageData *outimg);
 
 int main(){
     
+    //画像ファイルのファイル名とパス指定
     char *fname = "./SAMPLE.bmp";
     char *linearname = "./linear.bmp";
     char *original_histname = "./original_hist.bmp";
@@ -19,8 +20,10 @@ int main(){
     ImageData *linear_histimg;
     ImageData *linear_mono_histimg;
     
+    //画像の読み込み
     readBMPfile(fname,&img);
     
+    //空画像の作成
     linearimg = createImage(img->width,img->height,img->depth);
     original_histimg = createImage(256, 256, img->depth);
     linear_histimg = createImage(256, 256, img->depth);
@@ -39,6 +42,7 @@ int main(){
     writeBMPfile(linear_histname, linear_histimg);
     writeBMPfile(linear_mono_histname, linear_mono_histimg);
     
+    //画像領域の解放(必要あるのか?)
     disposeImage(img);
     disposeImage(linearimg);
     disposeImage(original_histimg);
@@ -46,6 +50,7 @@ int main(){
     disposeImage(linear_mono_histimg);
 }
 
+//各色のヒストグラムの出力
 void make_mono_histgram(ImageData *img, ImageData *histimg) {
     int i, x, y;
     long int hist[256][3] = {};
@@ -81,39 +86,38 @@ void make_mono_histgram(ImageData *img, ImageData *histimg) {
                 takasa[l] = h;
             }
             
-            if(l == 0) {
-                for(y=0;y<h;y++) {
+            //いまいちなやり方(時間があったら直す)
+            for(y=0;y<h;y++) {
+                if(l == 0) {
                     if(y < takasa[l]) {
                         pix.r = 255; pix.g = 0; pix.b = 0;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
                     }
-                    setPixel(histimg,x,h-1-y,&pix);
-                }
-            } else if(l == 1) {
-                for(y=0;y<h;y++) {
+                    
+                } else if(l == 1) {
                     if(y < takasa[l]) {
                         pix.r = 0; pix.g = 255; pix.b = 0;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
                     }
-                    setPixel(histimg,x,h+l*256-1-y,&pix);
-                }
-            }else if(l == 2) {
-                for(y=0;y<h;y++){
+                    
+                }else if(l == 2) {
                     if(y < takasa[l]) {
                         pix.r = 0; pix.g = 0; pix.b = 255;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
                     }
-                    setPixel(histimg,x,h+l*256-1-y,&pix);
                 }
+                setPixel(histimg,x,h+l*256-1-y,&pix);
             }
         }
     }
 }
 
+//全色のヒストグラム出力
 void make_mix_histgram(ImageData *img, ImageData *histimg) {
+    //下記はmake_mono_histgram冒頭と重複する操作なので関数にまとめる(時間があったら)
     int i,x,y;
     long int hist[256][3] = {};
     Pixel pix;
@@ -126,6 +130,7 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
             hist[pix.b][2]++;
         }
     }
+    //--------------------------------------------------------------------
     int l;
     int h = histimg->height;
     int max = 255;
@@ -140,13 +145,15 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
     }
     
     for(x=0;x<histimg->width;x++) {
-        for(l=0;l<3;l++){
+        for(l=0;l<3;l++) {
             takasa[l] = (int)(h / (double)max * hist[x][l]);
             
             if(takasa[l] > h) {
                 takasa[l] = h;
             }
         }
+        
+        //いまいちなやり方(時間があったら直す)
         for(y=0;y<h;y++) {
             if(y < takasa[0] && y < takasa[1] && y < takasa[2]) {
                 pix.r = 255 ;pix.g = 255; pix.b = 255;
@@ -170,6 +177,7 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
     }
 }
 
+//線形変換
 void linear(ImageData *img,ImageData *outimg) {
     int x,y,i; //for文用
     int max[3] = {}; //全要素0で初期化
