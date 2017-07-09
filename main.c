@@ -14,7 +14,7 @@ int main(){
     char *original_histname = "./original_hist.bmp";
     char *linear_histname = "./linear_hist.bmp";
     char *linear_mono_histname = "./linear_mono_hist.bmp";
-    char *green = "./green.bmp";
+    char *green = "./red.bmp";
     
     ImageData *img;
     ImageData *linearimg;
@@ -89,7 +89,7 @@ void centerOfHistgram(ImageData *img, ImageData *imgout) {
         for(y=0;y<img->height;y++) {
             getPixel(img,x,y,&pix);
             
-            if(pix.r >= g_r || pix.b >= g_b) {
+            if(pix.g >= g_g || pix.b >= g_b) {
                 pix.r = 255;
                 pix.g = 255;
                 pix.b = 255;
@@ -97,8 +97,6 @@ void centerOfHistgram(ImageData *img, ImageData *imgout) {
             setPixel(imgout,x,y,&pix);
         }
     }
-    
-    
 }
 
 //各色のヒストグラムの出力
