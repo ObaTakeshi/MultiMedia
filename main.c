@@ -4,6 +4,7 @@
 void make_mono_histgram();
 void make_mix_histgram(ImageData *img, ImageData *histimg);
 void linear(ImageData *img, ImageData *outimg);
+void centerOfHistgram(ImageData *img, ImageData *imgout);
 
 int main(){
     
@@ -13,12 +14,14 @@ int main(){
     char *original_histname = "./original_hist.bmp";
     char *linear_histname = "./linear_hist.bmp";
     char *linear_mono_histname = "./linear_mono_hist.bmp";
+    char *green = "./green.bmp";
     
     ImageData *img;
     ImageData *linearimg;
     ImageData *original_histimg;
     ImageData *linear_histimg;
     ImageData *linear_mono_histimg;
+    ImageData *green_img;
     
     //画像の読み込み
     readBMPfile(fname,&img);
@@ -28,11 +31,14 @@ int main(){
     original_histimg = createImage(256, 256, img->depth);
     linear_histimg = createImage(256, 256, img->depth);
     linear_mono_histimg = createImage(256, 768, img->depth);
+    green_img = createImage(img->width,img->height,img->depth);
     
     linear(img,linearimg);
     
+    centerOfHistgram(img, green_img);
     make_mix_histgram(img,original_histimg);
     
+    writeBMPfile(green, green_img);
     writeBMPfile(original_histname,original_histimg);
     writeBMPfile(linearname,linearimg);
     
@@ -48,6 +54,51 @@ int main(){
     disposeImage(original_histimg);
     disposeImage(linear_histimg);
     disposeImage(linear_mono_histimg);
+}
+
+void centerOfHistgram(ImageData *img, ImageData *imgout) {
+    int i, l, x, y;
+    int g_r = 0, g_g = 0, g_b = 0;
+    long int hist[257][3] = {};
+    Pixel pix;
+    for(x=0;x<img->width;x++) {
+        for(y=0;y<img->height;y++) {
+            getPixel(img,x,y,&pix);
+            hist[pix.r][0]++;
+            hist[pix.g][1]++;
+            hist[pix.b][2]++;
+        }
+    }
+    
+    for(i=0;i<256;i++) {
+        for(l=0;l<3;l++) {
+            hist[256][l] = hist[256][l] + hist[i][l] * (i+1);
+        }
+        g_r += hist[i][0];
+        g_g += hist[i][1];
+        g_b += hist[i][2];
+    }
+    
+    g_r = (int)(hist[256][0] / g_r);
+    g_g = (int)(hist[256][1] / g_g);
+    g_b = (int)(hist[256][2] / g_b);
+    
+    printf("%d,%d,%d\n",g_r,g_g,g_b);
+    
+    for(x=0;x<img->width;x++) {
+        for(y=0;y<img->height;y++) {
+            getPixel(img,x,y,&pix);
+            
+            if(pix.r >= g_r || pix.b >= g_b) {
+                pix.r = 255;
+                pix.g = 255;
+                pix.b = 255;
+            }
+            setPixel(imgout,x,y,&pix);
+        }
+    }
+    
+    
 }
 
 //各色のヒストグラムの出力
