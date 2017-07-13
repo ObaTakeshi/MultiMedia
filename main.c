@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "image.h"
+#include <math.h>
 
+void turn(ImageData *img, ImageData *outimg, int theta);
 void make_mono_histgram();
 void make_mix_histgram(ImageData *img, ImageData *histimg);
 void linear(ImageData *img, ImageData *outimg);
@@ -13,24 +15,34 @@ int main(){
     char *original_histname = "./original_hist.bmp";
     char *linear_histname = "./linear_hist.bmp";
     char *linear_mono_histname = "./linear_mono_hist.bmp";
+    char *turn_name = "./turn_nohole.bmp";
     
     ImageData *img;
     ImageData *linearimg;
     ImageData *original_histimg;
     ImageData *linear_histimg;
     ImageData *linear_mono_histimg;
-    
+    ImageData *turnimg;
+
     //画像の読み込み
     readBMPfile(fname,&img);
-    
+
+    int size,theta;
+    size = (int)(sqrt(img->width*img->width + img->height*img->height));
+
     //空画像の作成
     linearimg = createImage(img->width,img->height,img->depth);
     original_histimg = createImage(256, 256, img->depth);
     linear_histimg = createImage(256, 256, img->depth);
     linear_mono_histimg = createImage(256, 768, img->depth);
-    
+    turnimg = createImage(size,size,img->depth);
     linear(img,linearimg);
     
+    printf("回転する角度を入力してください>>"); 
+    scanf("%d", &theta);
+    turn(img,turnimg, theta);
+    writeBMPfile(turn_name,turnimg);
+
     make_mix_histgram(img,original_histimg);
     
     writeBMPfile(original_histname,original_histimg);
@@ -48,6 +60,50 @@ int main(){
     disposeImage(original_histimg);
     disposeImage(linear_histimg);
     disposeImage(linear_mono_histimg);
+}
+
+void turn(ImageData *img,ImageData *outimg, int theta){
+    int i, j, x, y;
+    int a, b;
+    int x1_center = (int)(img->width/2), y1_center = (int)(img->height/2);
+    int x2_center = (int)(outimg->width/2), y2_center = (int)(outimg->height/2);
+    int x_move = x2_center-x1_center, y_move = y2_center-y1_center;
+    double rad = ((double)theta/180)*M_PI;
+
+    Pixel pix;
+    Pixel black;
+    black.r = 0; black.g = 0; black.b = 0;
+    
+    ImageData *tempimg;
+    tempimg = createImage(outimg->width, outimg->height, outimg->depth);
+    for(i=0; i<img->width; i++){
+        for(j=0; j<img->height; j++){
+            a = getPixel(img, i, j, &pix);
+            b = setPixel(tempimg, i+x_move, j+y_move, &pix);
+        }
+    }
+
+    for(i=0;i<outimg->height;i++){
+        for(j=0;j<outimg->width;j++){
+            x = (int)((j-x2_center)*cos(rad)-(i-y2_center)*sin(rad)+x1_center);
+            y = (int)((j-x2_center)*sin(rad)+(i-y2_center)*cos(rad)+y1_center);
+            if(x>=0 && x<img->width && y>=0 && y<img->height){
+                a = getPixel(img, x, y, &pix);
+                if (a == -1){
+                    printf("getError(%d,%d)¥n",j,i);
+                }
+                b = setPixel(outimg,j,i,&pix);
+                if (b == -1){
+                    printf("setError(%d,%d)¥n",x,y);
+                }
+            } else {
+                b = setPixel(outimg,j,i,&black);
+                if (b == -1){
+                    printf("setError(%d,%d)¥n",x,y);
+                }
+            }
+        }
+    }
 }
 
 //各色のヒストグラムの出力
