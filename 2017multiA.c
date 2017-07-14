@@ -56,6 +56,13 @@ int main(){
     //画像の回転
     printf("線形変化した画像が回転する角度を入力してください(°)>>");
     scanf("%d", &theta);
+    
+    //負の角度・360°以上に対応
+    theta = theta % 360;
+    if(theta < 0) {
+        theta = 360+theta;
+    }
+    
     turn(linearimg,turnimg, theta);
     writeBMPfile(turn_name,turnimg);
     
