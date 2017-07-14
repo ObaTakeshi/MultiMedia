@@ -146,7 +146,6 @@ void make_mono_histgram(ImageData *img, ImageData *histimg) {
                 takasa = h;
             }
             
-            //いまいちなやり方(時間があったら直す)
             for(y=0;y<h;y++) {
                 if(l == 0) {
                     if(y < takasa) {
