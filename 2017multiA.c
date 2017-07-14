@@ -11,11 +11,11 @@ int main(){
     
     //画像ファイルのファイル名とパス指定
     char *fname = "./SAMPLE.bmp";
-    char *linearname = "./linear.bmp";
-    char *original_histname = "./original_hist.bmp";
-    char *linear_histname = "./linear_hist.bmp";
-    char *linear_mono_histname = "./linear_mono_hist.bmp";
-    char *turn_name = "./turn_nohole.bmp";
+    char *linearname = "A-1.bmp";           //"./linear.bmp";
+    char *original_histname = "A-2.bmp";    //"./original_hist.bmp";
+    char *linear_histname = "A-3.bmp";      //"./linear_hist.bmp";
+    char *linear_mono_histname = "A-4.bmp"; //"./linear_mono_hist.bmp";
+    char *turn_name = "A-5.bmp";            //"./turn_nohole.bmp";
     
     ImageData *img;
     ImageData *linearimg;
@@ -24,9 +24,10 @@ int main(){
     ImageData *linear_mono_histimg;
     ImageData *turnimg;
 
-    //画像の読み込み
+    //元画像の読み込み
     readBMPfile(fname,&img);
 
+    //回転に必要
     int size,theta;
     size = (int)(sqrt(img->width*img->width + img->height*img->height));
 
@@ -38,33 +39,37 @@ int main(){
     turnimg = createImage(size,size,img->depth);
     linear(img,linearimg);
     
-    printf("回転する角度を入力してください>>"); 
-    scanf("%d", &theta);
-    turn(img,turnimg, theta);
-    writeBMPfile(turn_name,turnimg);
-
+    //元画像のヒストグラム
     make_mix_histgram(img,original_histimg);
     
+    //画像の出力
     writeBMPfile(original_histname,original_histimg);
     writeBMPfile(linearname,linearimg);
     
+    //変換後のヒストグラム
     make_mix_histgram(linearimg, linear_histimg);
     make_mono_histgram(linearimg, linear_mono_histimg);
     
     writeBMPfile(linear_histname, linear_histimg);
     writeBMPfile(linear_mono_histname, linear_mono_histimg);
     
-    //画像領域の解放(必要あるのか?)
+    //画像の回転
+    printf("線形変化した画像が回転する角度を入力してください(°)>>");
+    scanf("%d", &theta);
+    turn(linearimg,turnimg, theta);
+    writeBMPfile(turn_name,turnimg);
+    
+    //画像領域の解放
     disposeImage(img);
     disposeImage(linearimg);
     disposeImage(original_histimg);
     disposeImage(linear_histimg);
     disposeImage(linear_mono_histimg);
+    disposeImage(turnimg);
 }
 
 void turn(ImageData *img,ImageData *outimg, int theta){
     int i, j, x, y;
-    int a, b;
     int x1_center = (int)(img->width/2), y1_center = (int)(img->height/2);
     int x2_center = (int)(outimg->width/2), y2_center = (int)(outimg->height/2);
     int x_move = x2_center-x1_center, y_move = y2_center-y1_center;
@@ -78,8 +83,8 @@ void turn(ImageData *img,ImageData *outimg, int theta){
     tempimg = createImage(outimg->width, outimg->height, outimg->depth);
     for(i=0; i<img->width; i++){
         for(j=0; j<img->height; j++){
-            a = getPixel(img, i, j, &pix);
-            b = setPixel(tempimg, i+x_move, j+y_move, &pix);
+            getPixel(img, i, j, &pix);
+            setPixel(tempimg, i+x_move, j+y_move, &pix);
         }
     }
 
@@ -88,23 +93,15 @@ void turn(ImageData *img,ImageData *outimg, int theta){
             x = (int)((j-x2_center)*cos(rad)-(i-y2_center)*sin(rad)+x1_center);
             y = (int)((j-x2_center)*sin(rad)+(i-y2_center)*cos(rad)+y1_center);
             if(x>=0 && x<img->width && y>=0 && y<img->height){
-                a = getPixel(img, x, y, &pix);
-                if (a == -1){
-                    printf("getError(%d,%d)¥n",j,i);
-                }
-                b = setPixel(outimg,j,i,&pix);
-                if (b == -1){
-                    printf("setError(%d,%d)¥n",x,y);
-                }
+                getPixel(img, x, y, &pix);
+                setPixel(outimg,j,i,&pix);
             } else {
-                b = setPixel(outimg,j,i,&black);
-                if (b == -1){
-                    printf("setError(%d,%d)¥n",x,y);
-                }
+                setPixel(outimg,j,i,&black);
             }
         }
     }
 }
+
 
 //各色のヒストグラムの出力
 void make_mono_histgram(ImageData *img, ImageData *histimg) {
@@ -173,7 +170,6 @@ void make_mono_histgram(ImageData *img, ImageData *histimg) {
 
 //全色のヒストグラム出力
 void make_mix_histgram(ImageData *img, ImageData *histimg) {
-    //下記はmake_mono_histgram冒頭と重複する操作なので関数にまとめる(時間があったら)
     int i,x,y;
     long int hist[256][3] = {};
     Pixel pix;
@@ -186,7 +182,6 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
             hist[pix.b][2]++;
         }
     }
-    //--------------------------------------------------------------------
     int l;
     int h = histimg->height;
     int max = 255;
@@ -209,7 +204,6 @@ void make_mix_histgram(ImageData *img, ImageData *histimg) {
             }
         }
         
-        //いまいちなやり方(時間があったら直す)
         for(y=0;y<h;y++) {
             if(y < takasa[0] && y < takasa[1] && y < takasa[2]) {
                 pix.r = 255 ;pix.g = 255; pix.b = 255;
