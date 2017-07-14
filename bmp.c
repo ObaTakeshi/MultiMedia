@@ -127,7 +127,7 @@ int countOfDIBColorEntries(int iBitCount){
     break;
   case 8:
     iColors = 256;
-break;
+    break;
   default:
     iColors = 0;
     break;

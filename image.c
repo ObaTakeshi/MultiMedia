@@ -1,4 +1,5 @@
 #include "image.h"
+
 /*
 画像データ作成
 width:画像の横幅 height:画像の縦幅 depth:1画素あたりのビット数(8 or 24)
