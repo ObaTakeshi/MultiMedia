@@ -54,7 +54,7 @@ int main(){
     writeBMPfile(linear_mono_histname, linear_mono_histimg);
     
     //画像の回転
-    printf("線形変化した画像が回転する角度を入力してください(°)>>");
+    printf("線形変換した画像が回転する角度を入力してください(°)>>");
     scanf("%d", &theta);
     
     //負の角度・360°以上に対応
@@ -127,7 +127,7 @@ void make_mono_histgram(ImageData *img, ImageData *histimg) {
     int l;
     int h = histimg->height;
     int max[3] = {255, 255, 255};
-    int takasa[3];
+    int takasa;
     
     for(i=0;i<256;i++) {
         for(l=0;l<3;l++) {
@@ -140,30 +140,30 @@ void make_mono_histgram(ImageData *img, ImageData *histimg) {
     for(x=0;x<histimg->width;x++) {
         for(l=0;l<3;l++) {
             h = histimg->height / 3;
-            takasa[l] = (int)(h / (double)max[l] * hist[x][l]);
-            
-            if(takasa[l] > h) {
-                takasa[l] = h;
+            takasa = (int)(h / (double)max[l] * hist[x][l]);
+
+            if(takasa > h) {
+                takasa = h;
             }
             
             //いまいちなやり方(時間があったら直す)
             for(y=0;y<h;y++) {
                 if(l == 0) {
-                    if(y < takasa[l]) {
+                    if(y < takasa) {
                         pix.r = 255; pix.g = 0; pix.b = 0;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
                     }
                     
                 } else if(l == 1) {
-                    if(y < takasa[l]) {
+                    if(y < takasa) {
                         pix.r = 0; pix.g = 255; pix.b = 0;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
                     }
                     
                 }else if(l == 2) {
-                    if(y < takasa[l]) {
+                    if(y < takasa) {
                         pix.r = 0; pix.g = 0; pix.b = 255;
                     } else {
                         pix.r = 0; pix.g = 0; pix.b = 0;
