@@ -57,12 +57,6 @@ int main(){
     printf("線形変換した画像が回転する角度を入力してください(°)>>");
     scanf("%d", &theta);
     
-    //負の角度・360°以上に対応
-    theta = theta % 360;
-    if(theta < 0) {
-        theta = 360+theta;
-    }
-    
     turn(linearimg,turnimg, theta);
     writeBMPfile(turn_name,turnimg);
     
@@ -85,15 +79,6 @@ void turn(ImageData *img,ImageData *outimg, int theta){
     Pixel pix;
     Pixel black;
     black.r = 0; black.g = 0; black.b = 0;
-    
-    ImageData *tempimg;
-    tempimg = createImage(outimg->width, outimg->height, outimg->depth);
-    for(i=0; i<img->width; i++){
-        for(j=0; j<img->height; j++){
-            getPixel(img, i, j, &pix);
-            setPixel(tempimg, i+x_move, j+y_move, &pix);
-        }
-    }
 
     for(i=0;i<outimg->height;i++){
         for(j=0;j<outimg->width;j++){
