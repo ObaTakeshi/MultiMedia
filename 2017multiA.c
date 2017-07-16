@@ -73,7 +73,6 @@ void turn(ImageData *img,ImageData *outimg, int theta){
     int i, j, x, y;
     int x1_center = (int)(img->width/2), y1_center = (int)(img->height/2);
     int x2_center = (int)(outimg->width/2), y2_center = (int)(outimg->height/2);
-    int x_move = x2_center-x1_center, y_move = y2_center-y1_center;
     double rad = ((double)theta/180)*M_PI;
 
     Pixel pix;
