@@ -3,7 +3,7 @@
 #include <math.h>
 
 void turn(ImageData *img, ImageData *outimg, int theta);
-void make_mono_histgram();
+void make_mono_histgram(ImageData *img, ImageData *histimg);
 void make_mix_histgram(ImageData *img, ImageData *histimg);
 void linear(ImageData *img, ImageData *outimg);
 
